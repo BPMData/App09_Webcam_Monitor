@@ -1,5 +1,6 @@
 import cv2
 import time
+from send_email import send_email
 
 # livefeed = cv2.VideoCapture(0)
 # check, frame = livefeed.read()
@@ -19,8 +20,9 @@ livefeed = cv2.VideoCapture(0)
 time.sleep(0.5)
 
 first_frame = None
-
+status_list = []
 while True:
+    foreign_object_status = 0
     check, frame = livefeed.read()
     gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     gray_frame_gau = cv2.GaussianBlur(gray_frame, (21, 21), 0)
@@ -59,8 +61,19 @@ while True:
         if cv2.contourArea(contour) < 5000:
             continue
         x, y, w, h = cv2.boundingRect(contour)
-        cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 3)  # give the dimensions of the bottom left and top right corner of your boundary rectangle
+        greenrect = cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 3)  # give the dimensions of the bottom left and top right corner of your boundary rectangle
         # (0, 255, 0) is the color of the frame, 3 is the width of the frame...
+        if greenrect.any():
+            foreign_object_status = 1
+
+
+    # ValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()
+    # any() returns True if at least one element in the iterable is truthy, while all() returns True only if all elements in the iterable are truthy. Otherwise, both functions return False.
+
+    status_list.append(foreign_object_status)
+    status_list = status_list[-2:] # This takes only the last two items from the status_list.
+    if status_list[0] == 1 and status_list[1] == 0:
+        send_email()
 
     cv2.imshow("Video", frame)
     key = cv2.waitKey(1)
