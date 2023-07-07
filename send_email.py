@@ -11,7 +11,7 @@ filename = time.strftime("%Y-%m-%d__%H-%M-%S")
 
 def send_email(image_path):
     message = EmailMessage()
-    message["Subject"] = "A wild Missingno has appeared!"
+    message["Subject"] = "Your Webcam detected movement!"
     message.set_content("See attached image for details!")
 
     with open(image_path, "rb") as imagefile:

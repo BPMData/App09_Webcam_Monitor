@@ -84,10 +84,10 @@ while True:
     status_list.append(foreign_object_status)
     status_list = status_list[-2:] # This takes only the last two items from the status_list.
     if status_list[0] == 1 and status_list[1] == 0:
-        all_images = glob.glob("images/*.png")
+        all_images = glob.glob("images/*.jpg")
         index_to_email = int((len(all_images)) / 2)
         image_to_email = all_images[index_to_email]
-        send_email()
+        send_email(image_to_email)
         try:
             shutil.rmtree(imgdir)
             print(f'{imgdir} has been removed')
@@ -99,5 +99,7 @@ while True:
 
     if key == ord("q"):
         break
+
+print("blah blah blah")
 
 livefeed.release()
