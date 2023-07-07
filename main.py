@@ -16,12 +16,53 @@ import time
 # time.sleep(1)
 
 livefeed = cv2.VideoCapture(0)
-time.sleep(3)
+time.sleep(0.5)
+
+first_frame = None
 
 while True:
     check, frame = livefeed.read()
-    cv2.imshow("My Video", frame)
+    gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    gray_frame_gau = cv2.GaussianBlur(gray_frame, (21, 21), 0)
+    # Intentionally blurring the frame data actually reduces the filesize of the frame, as does
+    # making it grayscale.
+# """The function takes three main arguments:
+#
+# gray_frame: The input grayscale frame to be blurred.
+# (21, 21): The size of the Gaussian kernel. This specifies the width and height of the kernel used for blurring. A larger kernel size results in stronger blurring.
+# 0: The standard deviation of the Gaussian kernel in the X and Y directions. Setting it to 0 lets OpenCV automatically calculate it based on the kernel size.
+# """
+#     cv2.imshow("My Video", gray_frame_gau)
 
+    if first_frame is not None:
+        pass
+    else:
+        first_frame = gray_frame_gau
+        # As this will only run once, first_frame will be permanently frozen to whatever was on screen
+        # when the webcam was first booted up.
+
+    delta_frame = cv2.absdiff(first_frame, gray_frame_gau)
+    # cv2.imshow("My Video", delta_frame)
+    # ^^^ uncommment this and comment the earlier cv2.imshow to see what this delta frame looks like.
+
+    thresh_frame = cv2.threshold(delta_frame, 45, 255, cv2.THRESH_BINARY)[1]
+    # Any pixel with a value above 255 becomes pure white.
+    # See figure[THRESH] in the notebook to see what this looks like as actual numbers
+    dil_frame = cv2.dilate(thresh_frame, None, iterations=2)
+    # This further de-noises the image.
+    # cv2.imshow("My Video", dil_frame)
+
+# Now we want to find contours around the white image:
+    countours, check = cv2.findContours(dil_frame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    for contour in countours:
+        if cv2.contourArea(contour) < 5000:
+            continue
+        x, y, w, h = cv2.boundingRect(contour)
+        cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 3)  # give the dimensions of the bottom left and top right corner of your boundary rectangle
+        # (0, 255, 0) is the color of the frame, 3 is the width of the frame...
+
+    cv2.imshow("Video", frame)
     key = cv2.waitKey(1)
 
     if key == ord("q"):
