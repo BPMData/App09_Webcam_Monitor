@@ -1,6 +1,11 @@
 import cv2
 import time
 from send_email import send_email
+import glob
+import os
+import shutil
+
+imgdir = "images"
 
 # livefeed = cv2.VideoCapture(0)
 # check, frame = livefeed.read()
@@ -22,6 +27,7 @@ time.sleep(0.5)
 first_frame = None
 status_list = []
 while True:
+    filename = time.strftime("%Y-%m-%d__%H-%M-%S")
     foreign_object_status = 0
     check, frame = livefeed.read()
     gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -66,6 +72,11 @@ while True:
         if greenrect.any():
             foreign_object_status = 1
 
+            if not os.path.exists(imgdir):
+                os.makedirs(imgdir)
+                cv2.imwrite(f"{imgdir}/{filename}.jpg", frame)
+            else:
+                cv2.imwrite(f"{imgdir}/{filename}.jpg", frame)
 
     # ValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()
     # any() returns True if at least one element in the iterable is truthy, while all() returns True only if all elements in the iterable are truthy. Otherwise, both functions return False.
@@ -73,7 +84,15 @@ while True:
     status_list.append(foreign_object_status)
     status_list = status_list[-2:] # This takes only the last two items from the status_list.
     if status_list[0] == 1 and status_list[1] == 0:
+        all_images = glob.glob("images/*.png")
+        index_to_email = int((len(all_images)) / 2)
+        image_to_email = all_images[index_to_email]
         send_email()
+        try:
+            shutil.rmtree(imgdir)
+            print(f'{imgdir} has been removed')
+        except OSError as e:
+            print(f'Error: {e.filename} - {e.strerror}')
 
     cv2.imshow("Video", frame)
     key = cv2.waitKey(1)

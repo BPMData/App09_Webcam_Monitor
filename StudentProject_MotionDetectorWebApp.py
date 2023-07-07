@@ -1,10 +1,14 @@
 import cv2
 import streamlit as st
 import time
+import datetime
+
+datetime
 from time import strftime
 def ord(n):
     return str(n)+("th" if 4<=n%100<=20 else {1:"st",2:"nd",3:"rd"}.get(n%10, "th"))
 
+filename = time.strftime("%Y-%m-%d__%H-%M-%S")
 daymonth = time.strftime("%A, %B ")
 date = ord(int(time.strftime("%d")))
 dayofyear = ord(int(time.strftime("%j")))
@@ -31,6 +35,8 @@ if start:
 
     while True:
         check, frame = webcam.read()
+        cv2.imwrite("", frame)
+
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
         # Update current_time at the specified interval
