@@ -4,22 +4,24 @@ from send_email import send_email
 import glob
 import os
 import shutil
+from threading import Thread, Condition
+
+condition = Condition()
 
 imgdir = "images"
 
-# livefeed = cv2.VideoCapture(0)
-# check, frame = livefeed.read()
-# time.sleep(1)
-# cv2.imwrite("testframe.png", frame)
-# time.sleep(1)
-# check, frame = livefeed.read()
-# time.sleep(1)
-# cv2.imwrite("testframe2.png", frame)
-# time.sleep(1)
-# check, frame = livefeed.read()
-# time.sleep(1)
-# cv2.imwrite("testframe3.png", frame)
-# time.sleep(1)
+
+def cleanup(directory, condition):
+    with condition:
+        condition.wait()
+    print("cleanup started")
+    try:
+        shutil.rmtree(directory)
+        print(f'{directory} has been removed')
+    except OSError as e:
+        print(f'Error: {e.filename} - {e.strerror}')
+    print("cleanup ended")
+
 
 livefeed = cv2.VideoCapture(0)
 time.sleep(0.5)
@@ -87,12 +89,16 @@ while True:
         all_images = glob.glob("images/*.jpg")
         index_to_email = int((len(all_images)) / 2)
         image_to_email = all_images[index_to_email]
-        send_email(image_to_email)
-        try:
-            shutil.rmtree(imgdir)
-            print(f'{imgdir} has been removed')
-        except OSError as e:
-            print(f'Error: {e.filename} - {e.strerror}')
+        email_thread = Thread(target=send_email, args=(image_to_email, condition))
+        email_thread.daemon = True
+        email_thread.start()
+        # We COULD solve the problem by putting clean_thread and all that outside the while loop, so it only runs
+        # when the user quits the program with q.
+        # but I think there's a better way using CONDITIONS:
+        print("I'm between email thread and clean thread.")
+        clean_thread = Thread(target=cleanup, args=(imgdir, condition))
+        clean_thread.daemon = True
+        clean_thread.start()
 
     cv2.imshow("Video", frame)
     key = cv2.waitKey(1)
