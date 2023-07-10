@@ -66,7 +66,7 @@ while True:
     countours, check = cv2.findContours(dil_frame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
     for contour in countours:
-        if cv2.contourArea(contour) < 5000:
+        if cv2.contourArea(contour) < 4000:
             continue
         x, y, w, h = cv2.boundingRect(contour)
         greenrect = cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 3)  # give the dimensions of the bottom left and top right corner of your boundary rectangle
